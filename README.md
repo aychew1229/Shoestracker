@@ -7,6 +7,8 @@
 [![Offline First](https://img.shields.io/badge/Works-Offline-orange)](https://web.dev/offline/)
 [![No Backend](https://img.shields.io/badge/Backend-None-lightgrey)](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 
+
+**[Use the app Now 🧮](https://aychew1229.github.io/shoestracker/)**
 ---
 
 ## 📸 Features at a Glance
@@ -23,69 +25,7 @@
 | 📴 Offline Mode | Full offline support via Service Worker |
 | 📲 Installable | Add to Home Screen on Android and iOS (PWA) |
 
----
-
-## 🚀 Deploy to GitHub Pages (Step-by-Step)
-
-### Step 1 — Create a GitHub Repository
-
-1. Go to [github.com](https://github.com) and sign in
-2. Click the **+** icon → **New repository**
-3. Name it `soletrack` (or any name you prefer)
-4. Set it to **Public**
-5. Click **Create repository**
-
-### Step 2 — Upload the Files
-
-Upload these files/folders to the root of your repository:
-
 ```
-soletrack/
-├── index.html      ← Main app
-├── manifest.json   ← PWA manifest
-├── sw.js           ← Service Worker (offline support)
-└── icons/          ← App icons (used for install + home screen)
-    ├── icon-192.png
-    ├── icon-512.png
-    ├── icon-maskable-192.png
-    └── icon-maskable-512.png
-```
-
-**Via GitHub website (easiest):**
-1. Open your repository
-2. Click **Add file → Upload files**
-3. Drag in `index.html`, `manifest.json`, `sw.js`, and the entire `icons` folder (drag the folder itself — GitHub preserves the folder structure)
-4. Click **Commit changes**
-
-**Via Git (if you have it installed):**
-```bash
-git clone https://github.com/YOUR_USERNAME/soletrack.git
-# Copy the 3 files into the folder
-cd soletrack
-git add .
-git commit -m "Initial SoleTrack release"
-git push
-```
-
-### Step 3 — Enable GitHub Pages
-
-1. In your repository, go to **Settings** (top tab)
-2. Scroll down to **Pages** in the left sidebar
-3. Under **Source**, select **Deploy from a branch**
-4. Choose **main** branch → **/ (root)** folder
-5. Click **Save**
-
-### Step 4 — Access Your App
-
-After 1–2 minutes, your app is live at:
-
-```
-https://YOUR_USERNAME.github.io/soletrack/
-```
-
-> ✅ That's it! Share this link with anyone who needs to use the app.
-
----
 
 ## 📲 Installing on a Phone (Add to Home Screen)
 
@@ -228,12 +168,6 @@ const CACHE_NAME = 'soletrack-v1.3'; // bump this number
 | Old version still showing | Hard refresh: Ctrl+Shift+R (desktop) or clear site data |
 | Data disappeared | Was the browser cache cleared? Use Export regularly |
 | Can't see the app offline | Visit once online first so SW can cache it |
-
----
-
-## 📄 License
-
-MIT License — free to use, modify, and distribute.
 
 ---
 
