@@ -25,9 +25,9 @@
 | 📴 Offline Mode | Full offline support via Service Worker |
 | 📲 Installable | Add to Home Screen on Android and iOS (PWA) |
 
-```
 ---
-## 📲 Installing on a Phone (Add to Home Screen)
+
+## 📲 Installing on a Phone
 
 ### Android (Chrome)
 1. Open the app link in Chrome
@@ -48,7 +48,7 @@
 
 ## 🔐 How the Login System Works
 
-- All data is stored **locally in your browser** using `localStorage`
+- All data is store **locally in your browser** using `localStorage`
 - Each username creates its own isolated data space
 - Passwords are hashed before storage (not stored in plain text)
 - **Different users on the same device** each have their own separate data
