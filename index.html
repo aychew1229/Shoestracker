@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="SoleTrack — Mobile-first shoe retail tracker. Log sales, purchases, profit, and stock. Works offline.">
+<meta name="theme-color" content="#0F172A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SoleTrack">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.json">
+<!-- Apple touch icon (inline SVG data URI) -->
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+<title>SoleTrack — Shoe Marketplace Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0F172A;--card:#1E293B;--card2:#263044;--border:#334155;
+  --amber:#F59E0B;--amber2:#FCD34D;--emerald:#10B981;--rose:#F43F5E;
+  --sky:#38BDF8;--slate:#94A3B8;--white:#F8FAFC;--muted:#64748B;
+  --nav-h:64px;--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;background:var(--navy)}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--white);
+  min-height:100vh;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px);overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif}
+
+/* ── Install Banner ── */
+#install-banner{
+  position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 10px);left:12px;right:12px;
+  background:linear-gradient(135deg,#1E293B,#263044);
+  border:1px solid var(--amber);border-radius:16px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;z-index:500;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  transform:translateY(120px);opacity:0;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+  pointer-events:none;
+}
+#install-banner.show{transform:translateY(0);opacity:1;pointer-events:all}
+.install-icon{font-size:2rem;flex-shrink:0}
+.install-text .title{font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;color:var(--white)}
+.install-text .sub{font-size:.75rem;color:var(--slate);margin-top:2px}
+.install-btns{display:flex;gap:8px;flex-shrink:0;margin-left:auto}
+.btn-install{background:var(--amber);color:var(--navy);border:none;border-radius:8px;
+  padding:8px 14px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer}
+.btn-install-dismiss{background:none;border:1px solid var(--border);color:var(--muted);
+  border-radius:8px;padding:8px 10px;font-size:.8rem;cursor:pointer}
+
+/* ── Update Banner ── */
+#update-banner{
+  position:fixed;top:60px;left:12px;right:12px;
+  background:#1E293B;border:1px solid var(--emerald);border-radius:12px;
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  z-index:500;box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transform:translateY(-120px);opacity:0;transition:all .3s;pointer-events:none;
+}
+#update-banner.show{transform:translateY(0);opacity:1;pointer-events:all}
+.btn-update{background:var(--emerald);color:var(--navy);border:none;border-radius:8px;
+  padding:7px 14px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer}
+
+/* ── Offline Indicator ── */
+#offline-bar{
+  position:fixed;top:0;left:0;right:0;z-index:600;
+  background:var(--rose);color:var(--white);text-align:center;
+  font-size:.78rem;font-weight:600;padding:5px;
+  transform:translateY(-40px);transition:transform .3s;
+  letter-spacing:.3px;
+}
+#offline-bar.show{transform:translateY(0)}
+
+/* ── Auth Screen ── */
+#auth-screen{
+  position:fixed;inset:0;z-index:999;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+}
+.auth-logo{
+  font-family:'Outfit',sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;
+}
+.auth-tagline{color:var(--slate);font-size:.85rem;margin-bottom:40px;letter-spacing:.5px}
+.auth-card{
+  width:100%;max-width:360px;background:var(--card);
+  border:1px solid var(--border);border-radius:20px;padding:28px 24px;
+}
+.auth-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.78rem;color:var(--slate);font-weight:500;
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input{
+  width:100%;background:var(--card2);border:1.5px solid var(--border);
+  border-radius:10px;padding:12px 14px;color:var(--white);
+  font-family:'Inter',sans-serif;font-size:.95rem;transition:border-color .2s;outline:none;
+}
+.field input:focus{border-color:var(--amber)}
+.btn-primary{
+  width:100%;background:var(--amber);color:var(--navy);border:none;border-radius:10px;
+  padding:13px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:opacity .2s,transform .1s;
+}
+.btn-primary:active{transform:scale(.98);opacity:.9}
+.auth-hint{text-align:center;font-size:.78rem;color:var(--muted);margin-top:14px}
+.auth-error{
+  background:rgba(244,63,94,.15);border:1px solid var(--rose);border-radius:8px;
+  padding:10px 12px;font-size:.82rem;color:var(--rose);margin-bottom:14px;display:none;
+}
+
+/* ── Top Bar ── */
+#topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(15,23,42,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar-logo{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--amber);letter-spacing:-.5px}
+.topbar-user{display:flex;align-items:center;gap:8px}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),#E07B00);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:.85rem;color:var(--navy);
+}
+.user-name{font-size:.85rem;font-weight:500;color:var(--white);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;
+  color:var(--slate);font-size:.75rem;cursor:pointer;transition:all .2s}
+.btn-logout:hover{border-color:var(--rose);color:var(--rose)}
+
+/* ── Bottom Nav ── */
+#bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(30,41,59,.97);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);height:var(--nav-h);
+  padding-bottom:var(--safe-bottom);display:flex;align-items:center;
+}
+.nav-items{display:flex;width:100%}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 4px;cursor:pointer;transition:all .2s;
+  border:none;background:none;color:var(--muted);
+}
+.nav-item.active{color:var(--amber)}
+.nav-item svg{width:22px;height:22px;transition:transform .2s}
+.nav-item.active svg{transform:scale(1.15)}
+.nav-item span{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── Pages ── */
+.page{display:none;padding:16px;animation:fadeUp .25s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Section Title ── */
+.section-title{
+  font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;
+  margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.section-title .pill{
+  background:rgba(245,158,11,.15);color:var(--amber);border-radius:20px;
+  padding:2px 10px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* ── Stat Cards ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:16px 14px;position:relative;overflow:hidden;transition:transform .2s;
+}
+.stat-card::before{
+  content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;
+  border-radius:50%;opacity:.08;
+}
+.stat-card.amber::before{background:var(--amber)}
+.stat-card.emerald::before{background:var(--emerald)}
+.stat-card.rose::before{background:var(--rose)}
+.stat-card.sky::before{background:var(--sky)}
+.stat-card:active{transform:scale(.98)}
+.stat-label{font-size:.72rem;color:var(--slate);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.stat-value{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;line-height:1}
+.stat-value.amber{color:var(--amber)}
+.stat-value.emerald{color:var(--emerald)}
+.stat-value.rose{color:var(--rose)}
+.stat-value.sky{color:var(--sky)}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:4px}
+.stat-card.wide{grid-column:1/-1}
+.stat-card.shimmer{
+  background:linear-gradient(135deg,#1E293B 0%,#263044 50%,#1E293B 100%);
+  background-size:200% 100%;animation:shimmer 3s infinite;
+}
+@keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ── Forms ── */
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 16px;margin-bottom:20px}
+.form-card h3{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--amber)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-field{margin-bottom:12px}
+.form-field label{display:block;font-size:.75rem;color:var(--slate);font-weight:500;
+  margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.form-field input,.form-field select{
+  width:100%;background:var(--card2);border:1.5px solid var(--border);
+  border-radius:10px;padding:11px 12px;color:var(--white);
+  font-family:'Inter',sans-serif;font-size:.9rem;transition:border-color .2s;outline:none;
+}
+.form-field input:focus,.form-field select:focus{border-color:var(--amber)}
+.form-field select option{background:var(--card)}
+.btn-add{
+  background:var(--amber);color:var(--navy);border:none;border-radius:10px;
+  padding:12px 20px;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:all .2s;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-add:active{transform:scale(.98)}
+.btn-emerald{background:var(--emerald)}
+
+/* ── Tables ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px}
+.table-card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-card-header h3{font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--card2);padding:10px 12px;text-align:left;font-size:.7rem;
+  color:var(--slate);font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid rgba(51,65,85,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:600}
+.badge-emerald{background:rgba(16,185,129,.15);color:var(--emerald)}
+.badge-rose{background:rgba(244,63,94,.15);color:var(--rose)}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-sky{background:rgba(56,189,248,.15);color:var(--sky)}
+.btn-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;
+  padding:2px 6px;border-radius:6px;transition:all .2s}
+.btn-del:hover{color:var(--rose);background:rgba(244,63,94,.1)}
+.empty-row td{text-align:center;color:var(--muted);padding:28px;font-size:.85rem}
+
+/* ── Stock Alerts ── */
+.stock-list{display:flex;flex-direction:column;gap:10px}
+.stock-item{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.stock-name{font-weight:600;font-size:.9rem}
+.stock-qty{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800}
+.stock-qty.low{color:var(--rose)}
+.stock-qty.ok{color:var(--emerald)}
+.stock-qty.warn{color:var(--amber)}
+.stock-label{font-size:.7rem;color:var(--muted)}
+
+/* ── Reports ── */
+.month-selector{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.month-selector select{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:9px 12px;color:var(--white);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;flex:1;
+}
+
+/* ── Data Actions ── */
+.data-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.btn-export,.btn-import{
+  background:var(--card);border:1.5px solid var(--border);border-radius:12px;
+  padding:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
+  color:var(--white);font-family:'Outfit',sans-serif;font-weight:600;font-size:.85rem;transition:all .2s;
+}
+.btn-export:hover{border-color:var(--emerald);color:var(--emerald)}
+.btn-import:hover{border-color:var(--sky);color:var(--sky)}
+.btn-export svg,.btn-import svg{width:28px;height:28px}
+#import-file{display:none}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-80px);
+  background:var(--card2);border:1px solid var(--border);border-radius:12px;
+  padding:12px 20px;font-size:.85rem;font-weight:500;z-index:9999;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);pointer-events:none;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{border-color:var(--emerald);color:var(--emerald)}
+#toast.error{border-color:var(--rose);color:var(--rose)}
+#toast.info{border-color:var(--sky);color:var(--sky)}
+
+/* ── Profit Hero ── */
+.profit-hero{
+  background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.04));
+  border:1px solid rgba(16,185,129,.3);border-radius:20px;
+  padding:24px;margin-bottom:20px;text-align:center;
+}
+.profit-hero .label{font-size:.75rem;color:var(--slate);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.profit-hero .amount{font-family:'Outfit',sans-serif;font-size:3rem;font-weight:900;color:var(--emerald);line-height:1}
+.profit-hero .amount.negative{color:var(--rose)}
+.profit-hero .sub{font-size:.8rem;color:var(--muted);margin-top:6px}
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── Responsive ── */
+@media(min-width:640px){
+  .page{padding:20px 24px;max-width:720px;margin:0 auto}
+  .stats-grid{gap:16px}
+  .auth-card{padding:36px 32px}
+}
+@media(max-width:360px){
+  .stats-grid{gap:8px}
+  .stat-card{padding:12px 10px}
+  .stat-value{font-size:1.3rem}
+  .stat-label{font-size:.65rem}
+  .stat-sub{font-size:.65rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Offline Bar ── -->
+<div id="offline-bar">📵 You're offline — SoleTrack is running from cache</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<!-- ── Install Banner ── -->
+<div id="install-banner">
+  <div class="install-icon">👟</div>
+  <div class="install-text">
+    <div class="title">Install SoleTrack</div>
+    <div class="sub">Add to home screen for offline use</div>
+  </div>
+  <div class="install-btns">
+    <button class="btn-install" id="btn-install-ok">Install</button>
+    <button class="btn-install-dismiss" id="btn-install-no">✕</button>
+  </div>
+</div>
+
+<!-- ── Update Banner ── -->
+<div id="update-banner">
+  <span style="font-size:.85rem;color:var(--white)">🔄 New version available</span>
+  <button class="btn-update" id="btn-update">Update Now</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-logo">👟 SoleTrack</div>
+  <div class="auth-tagline">Your personal shoe market dashboard</div>
+  <div class="auth-card">
+    <div class="auth-title">Sign In or Register</div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="auth-username" placeholder="e.g. abebe_shoes" autocomplete="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="Your local password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="auth-submit-btn" onclick="handleAuth()">Enter SoleTrack →</button>
+    <div class="auth-hint">New username = new account is created automatically. All data stays in this device.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="topbar-logo">👟 SoleTrack</div>
+    <div class="topbar-user">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div class="user-name" id="user-name-display">User</div>
+      <button class="btn-logout" onclick="logout()">Exit</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div class="page active" id="page-dashboard">
+    <div class="section-title">Dashboard <span class="pill" id="today-date-label">Today</span></div>
+    <div class="profit-hero">
+      <div class="label">Today's Net Profit</div>
+      <div class="amount" id="today-profit">ETB 0</div>
+      <div class="sub" id="today-profit-sub">No sales recorded yet</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card amber">
+        <div class="stat-label">Revenue Today</div>
+        <div class="stat-value amber" id="today-revenue">0</div>
+        <div class="stat-sub">ETB earned</div>
+      </div>
+      <div class="stat-card emerald">
+        <div class="stat-label">Pairs Sold</div>
+        <div class="stat-value emerald" id="today-sold">0</div>
+        <div class="stat-sub">units today</div>
+      </div>
+      <div class="stat-card sky">
+        <div class="stat-label">Total Stock</div>
+        <div class="stat-value sky" id="total-stock">0</div>
+        <div class="stat-sub">pairs in hand</div>
+      </div>
+      <div class="stat-card rose">
+        <div class="stat-label">Low Stock</div>
+        <div class="stat-value rose" id="low-stock-count">0</div>
+        <div class="stat-sub">styles ≤ 5 left</div>
+      </div>
+    </div>
+    <div class="section-title" style="font-size:1rem;margin-bottom:12px">📦 Stock Alerts</div>
+    <div class="stock-list" id="stock-list-dash">
+      <div style="color:var(--muted);font-size:.85rem;padding:12px 0">No inventory yet. Add stock in the Buy tab.</div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-title" style="font-size:1rem;margin-bottom:12px">🕐 Recent Sales</div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Style</th><th>Qty</th><th>Sell/Unit</th><th>Profit</th></tr></thead>
+          <tbody id="recent-sales-tbody"><tr class="empty-row"><td colspan="4">No recent sales</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Buy ── -->
+  <div class="page" id="page-buy">
+    <div class="section-title">Buy Registry <span class="pill">Stock In</span></div>
+    <div class="form-card">
+      <h3>📥 Add Purchase Batch</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" id="buy-date">
+        </div>
+        <div class="form-field">
+          <label>Quantity</label>
+          <input type="number" id="buy-qty" placeholder="e.g. 12" min="1" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Shoe Style / Name</label>
+        <input type="text" id="buy-style" placeholder="e.g. Nike Air Max White" list="styles-datalist" autocomplete="off">
+        <datalist id="styles-datalist"></datalist>
+      </div>
+      <div class="form-field">
+        <label>Cost Price per Unit (ETB)</label>
+        <input type="number" id="buy-cost" placeholder="e.g. 850" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <button class="btn-add" id="buy-submit-btn" onclick="addPurchase()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Record Purchase
+      </button>
+    </div>
+    <div class="table-card">
+      <div class="table-card-header">
+        <h3>Purchase History</h3>
+        <span class="badge badge-amber" id="buy-count-badge">0 records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Style</th><th>Qty</th><th>Cost/u</th><th>Total</th><th></th></tr></thead>
+          <tbody id="buy-tbody"><tr class="empty-row"><td colspan="6">No purchases recorded</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Sell ── -->
+  <div class="page" id="page-sell">
+    <div class="section-title">Sell Registry <span class="pill">Stock Out</span></div>
+    <div class="form-card">
+      <h3>💰 Record Sale</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" id="sell-date">
+        </div>
+        <div class="form-field">
+          <label>Quantity Sold</label>
+          <input type="number" id="sell-qty" placeholder="e.g. 3" min="1" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Shoe Style</label>
+        <input type="text" id="sell-style" placeholder="Search a style in stock…" list="sell-styles-datalist" autocomplete="off">
+        <datalist id="sell-styles-datalist"></datalist>
+      </div>
+      <div class="form-field">
+        <label>Selling Price per Unit (ETB)</label>
+        <input type="number" id="sell-price" placeholder="e.g. 1200" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div id="sell-preview" style="background:var(--card2);border-radius:10px;padding:12px;margin-bottom:12px;font-size:.82rem;color:var(--muted);display:none"></div>
+      <button class="btn-add btn-emerald" id="sell-submit-btn" onclick="addSale()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Record Sale
+      </button>
+    </div>
+    <div class="table-card">
+      <div class="table-card-header">
+        <h3>Sales History</h3>
+        <span class="badge badge-emerald" id="sell-count-badge">0 records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Style</th><th>Qty</th><th>Sell/u</th><th>Cost/u</th><th>Profit</th><th></th></tr></thead>
+          <tbody id="sell-tbody"><tr class="empty-row"><td colspan="7">No sales recorded</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Reports ── -->
+  <div class="page" id="page-reports">
+    <div class="section-title">Reports <span class="pill">Analytics</span></div>
+    <div class="month-selector">
+      <select id="report-month-sel" onchange="renderReports()"></select>
+    </div>
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card amber">
+        <div class="stat-label">Buy Cost</div>
+        <div class="stat-value amber" id="rep-buy-cost">0</div>
+        <div class="stat-sub">ETB spent</div>
+      </div>
+      <div class="stat-card sky">
+        <div class="stat-label">Sales Revenue</div>
+        <div class="stat-value sky" id="rep-revenue">0</div>
+        <div class="stat-sub">ETB earned</div>
+      </div>
+      <div class="stat-card wide shimmer">
+        <div class="stat-label">Net Profit (Month)</div>
+        <div class="stat-value emerald" id="rep-profit">ETB 0</div>
+        <div class="stat-sub" id="rep-margin">Margin: 0%</div>
+      </div>
+    </div>
+    <div class="section-title" style="font-size:1rem;margin-bottom:12px">📦 Full Inventory Status</div>
+    <div class="stock-list" id="stock-list-full"></div>
+    <div class="divider"></div>
+    <div class="section-title" style="font-size:1rem;margin-bottom:12px">🔒 Data Backup</div>
+    <div class="data-actions">
+      <button class="btn-export" onclick="exportData()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-8m0 8l-3-3m3 3l3-3M3 17v1a2 2 0 002 2h14a2 2 0 002-2v-1"/></svg>
+        Export JSON
+      </button>
+      <label class="btn-import">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m0-8l-3 3m3-3l3 3M3 17v1a2 2 0 002 2h14a2 2 0 002-2v-1"/></svg>
+        Import JSON
+        <input type="file" id="import-file" accept=".json" onchange="importData(event)">
+      </label>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);line-height:1.6;margin-bottom:40px">
+      ⚠️ Data is stored locally in this browser only. Export regularly to keep a backup. Importing merges records without creating duplicates.
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ── Bottom Nav ── -->
+<div id="bottom-nav" style="display:none">
+  <div class="nav-items">
+    <button class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="navigate('buy')" id="nav-buy">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+      <span>Buy</span>
+    </button>
+    <button class="nav-item" onclick="navigate('sell')" id="nav-sell">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Sell</span>
+    </button>
+    <button class="nav-item" onclick="navigate('reports')" id="nav-reports">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span>Reports</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  SoleTrack — Application Logic
+// ════════════════════════════════════════════════════════════
+
+'use strict';
+
+let currentUser = null;
+let _deferredInstallPrompt = null;
+let _swRegistration = null;
+
+// ═══════════════════════════════════
+//  PWA: Service Worker Registration
+// ═══════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      _swRegistration = reg;
+      // Check for updates
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available
+            showUpdateBanner(newWorker);
+          }
+        });
+      });
+    }).catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+function showUpdateBanner(newWorker) {
+  const banner = document.getElementById('update-banner');
+  banner.classList.add('show');
+  document.getElementById('btn-update').onclick = () => {
+    newWorker.postMessage('SKIP_WAITING');
+    banner.classList.remove('show');
+    window.location.reload();
+  };
+}
+
+// ═══════════════════════════════════
+//  PWA: Install Prompt
+// ═══════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  // Show banner after 2s (let user see the app first)
+  setTimeout(() => {
+    if (!isAppInstalled()) showInstallBanner();
+  }, 2000);
+});
+
+function isAppInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
+function showInstallBanner() {
+  document.getElementById('install-banner').classList.add('show');
+}
+
+document.getElementById('btn-install-ok').addEventListener('click', async () => {
+  document.getElementById('install-banner').classList.remove('show');
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    const { outcome } = await _deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') toast('App installed! 🎉', 'success');
+    _deferredInstallPrompt = null;
+  }
+});
+
+document.getElementById('btn-install-no').addEventListener('click', () => {
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+// iOS Safari manual install hint (no beforeinstallprompt support)
+window.addEventListener('load', () => {
+  const isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  const isSafari = /safari/.test(navigator.userAgent.toLowerCase()) && !/chrome/.test(navigator.userAgent.toLowerCase());
+  if (isIOS && isSafari && !isAppInstalled()) {
+    setTimeout(() => {
+      const banner = document.getElementById('install-banner');
+      banner.querySelector('.install-text .title').textContent = 'Install on iPhone';
+      banner.querySelector('.install-text .sub').textContent = "Tap Share → 'Add to Home Screen'";
+      document.getElementById('btn-install-ok').textContent = 'Got it';
+      document.getElementById('btn-install-ok').onclick = () => banner.classList.remove('show');
+      banner.classList.add('show');
+    }, 2500);
+  }
+});
+
+// ═══════════════════════════════════
+//  Online / Offline Detection
+// ═══════════════════════════════════
+function updateOnlineStatus() {
+  const bar = document.getElementById('offline-bar');
+  if (!navigator.onLine) bar.classList.add('show');
+  else bar.classList.remove('show');
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ═══════════════════════════════════
+//  Storage Helpers (IndexedDB via localForage)
+// ═══════════════════════════════════
+localforage.config({
+  name: 'SoleTrack',
+  storeName: 'soletrack_data'
+});
+
+function userKey(key) { return 'st_' + currentUser + '_' + key; }
+
+async function saveData(key, data) {
+  try { await localforage.setItem(userKey(key), data); }
+  catch (e) { console.error('Storage error:', e); toast('Storage error — change may not be saved.', 'error'); }
+}
+
+async function loadData(key, fallback) {
+  if (fallback === undefined) fallback = [];
+  try {
+    const raw = await localforage.getItem(userKey(key));
+    return raw !== null && raw !== undefined ? raw : fallback;
+  } catch (e) { return fallback; }
+}
+
+// ═══════════════════════════════════
+//  Auth
+// ═══════════════════════════════════
+async function getAllUsers() {
+  try { return (await localforage.getItem('st_users')) || {}; }
+  catch (e) { return {}; }
+}
+async function saveAllUsers(u) { await localforage.setItem('st_users', u); }
+
+function simpleHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+  return (h >>> 0).toString(36);
+}
+
+async function handleAuth() {
+  const username = document.getElementById('auth-username').value.trim().toLowerCase();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-submit-btn');
+
+  if (!username || !password) { showAuthError('Please enter a username and password.'); return; }
+  if (!/^[a-z0-9_]{2,20}$/.test(username)) { showAuthError('Username: 2–20 chars, letters/numbers/underscore only.'); return; }
+  if (password.length < 3) { showAuthError('Password must be at least 3 characters.'); return; }
+
+  // Loading state so the UI doesn't feel frozen while IndexedDB resolves
+  const originalBtnText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+
+  try {
+    const users = await getAllUsers();
+    const hashed = simpleHash(password);
+
+    if (users[username]) {
+      if (users[username].hash !== hashed) { showAuthError('Incorrect password.'); return; }
+    } else {
+      users[username] = { hash: hashed, created: new Date().toISOString() };
+      await saveAllUsers(users);
+    }
+
+    currentUser = username;
+    errEl.style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('bottom-nav').style.display = 'flex';
+    document.getElementById('user-name-display').textContent = username;
+    document.getElementById('user-avatar').textContent = username[0].toUpperCase();
+
+    const today = todayStr();
+    document.getElementById('buy-date').value = today;
+    document.getElementById('sell-date').value = today;
+
+    await populateMonthSelector();
+    await refreshAll();
+  } catch (e) {
+    console.error(e);
+    showAuthError('Something went wrong loading your data. Please try again.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalBtnText; }
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-password').value = '';
+  navigate('dashboard');
+}
+
+// ═══════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════
+async function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  const navEl = document.getElementById('nav-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  if (page === 'sell') await populateSellStyleSelect();
+  if (page === 'reports') { await populateMonthSelector(); await renderReports(); }
+  if (page === 'dashboard') await renderDashboard();
+}
+
+// ═══════════════════════════════════
+//  Purchases (Buy)
+// ═══════════════════════════════════
+async function getPurchases() { return await loadData('purchases', []); }
+async function savePurchases(d) { await saveData('purchases', d); }
+
+async function addPurchase() {
+  const date  = document.getElementById('buy-date').value;
+  const style = document.getElementById('buy-style').value.trim();
+  const qty   = parseInt(document.getElementById('buy-qty').value, 10);
+  const cost  = parseFloat(document.getElementById('buy-cost').value);
+
+  if (!date)           { toast('Please select a date.', 'error'); return; }
+  if (!style)          { toast('Enter the shoe style name.', 'error'); return; }
+  if (!qty || qty < 1) { toast('Quantity must be at least 1.', 'error'); return; }
+  if (isNaN(cost) || cost < 0) { toast('Enter a valid cost price.', 'error'); return; }
+
+  const btn = document.getElementById('buy-submit-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const purchases = await getPurchases();
+    purchases.unshift({ id: Date.now(), date, style, qty, cost });
+    await savePurchases(purchases);
+    await renderBuyTable();
+    await updateStylesDatalist();
+    await refreshDashboardNumbers();
+    toast('Purchase recorded ✓', 'success');
+    document.getElementById('buy-style').value = '';
+    document.getElementById('buy-qty').value = '';
+    document.getElementById('buy-cost').value = '';
+  } catch (e) {
+    console.error(e);
+    toast('Could not save purchase. Please try again.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function deletePurchase(id) {
+  if (!confirm('Remove this purchase record?')) return;
+  const purchases = await getPurchases();
+  await savePurchases(purchases.filter(p => p.id !== id));
+  await renderBuyTable();
+  await refreshDashboardNumbers();
+  toast('Purchase removed', 'error');
+}
+
+async function renderBuyTable() {
+  const purchases = await getPurchases();
+  const tbody = document.getElementById('buy-tbody');
+  document.getElementById('buy-count-badge').textContent = purchases.length + ' records';
+  if (!purchases.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No purchases recorded yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = purchases.map(p => `
+    <tr>
+      <td>${fmtDate(p.date)}</td>
+      <td><strong>${esc(p.style)}</strong></td>
+      <td>${p.qty}</td>
+      <td>${fmt(p.cost)}</td>
+      <td>${fmt(p.qty * p.cost)}</td>
+      <td><button class="btn-del" onclick="deletePurchase(${p.id})" title="Delete">✕</button></td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════
+//  Sales (Sell) — FIFO Cost Tracking
+// ═══════════════════════════════════
+async function getSales() { return await loadData('sales', []); }
+async function saveSales(d) { await saveData('sales', d); }
+
+async function getStockLevels() {
+  const stock = {};
+  const purchases = await getPurchases();
+  const sales = await getSales();
+  for (const p of purchases) stock[p.style] = (stock[p.style] || 0) + p.qty;
+  for (const s of sales)     stock[s.style] = (stock[s.style] || 0) - s.qty;
+  return stock;
+}
+
+async function computeFIFOCostPerUnit(styleName, saleDate, saleQty, saleId) {
+  // All purchases for this style on or before the sale date, oldest first
+  const allPurchases = await getPurchases();
+  const lots = allPurchases
+    .filter(p => p.style === styleName && p.date <= saleDate)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id)
+    .map(p => ({ cost: p.cost, remaining: p.qty }));
+
+  // All prior sales of this style (before this sale), oldest first
+  const allSales = await getSales();
+  const priorSales = allSales
+    .filter(s => s.style === styleName && (s.date < saleDate || (s.date === saleDate && s.id < saleId)))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+
+  // Deduct prior sales from FIFO queue
+  let toDeduct = priorSales.reduce((sum, s) => sum + s.qty, 0);
+  for (const lot of lots) {
+    if (toDeduct <= 0) break;
+    const d = Math.min(lot.remaining, toDeduct);
+    lot.remaining -= d; toDeduct -= d;
+  }
+
+  // Now consume saleQty from queue to get weighted avg cost
+  let needed = saleQty, totalCost = 0, covered = 0;
+  for (const lot of lots) {
+    if (lot.remaining <= 0 || needed <= 0) continue;
+    const use = Math.min(lot.remaining, needed);
+    totalCost += use * lot.cost; covered += use; needed -= use;
+  }
+  return covered > 0 ? totalCost / covered : 0;
+}
+
+async function addSale() {
+  const date  = document.getElementById('sell-date').value;
+  const style = document.getElementById('sell-style').value.trim();
+  const qty   = parseInt(document.getElementById('sell-qty').value, 10);
+  const price = parseFloat(document.getElementById('sell-price').value);
+
+  if (!date)            { toast('Please select a date.', 'error'); return; }
+  if (!style)           { toast('Please enter a shoe style.', 'error'); return; }
+  if (!qty || qty < 1)  { toast('Quantity must be at least 1.', 'error'); return; }
+  if (isNaN(price) || price < 0) { toast('Enter a valid selling price.', 'error'); return; }
+
+  const btn = document.getElementById('sell-submit-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const stock = await getStockLevels();
+    const available = stock[style] || 0;
+    if (available < qty) {
+      toast('Only ' + available + ' units available for "' + style + '"', 'error'); return;
+    }
+
+    const id = Date.now();
+    const costPerUnit = await computeFIFOCostPerUnit(style, date, qty, id);
+    const sales = await getSales();
+    sales.unshift({ id, date, style, qty, price, costPerUnit });
+    await saveSales(sales);
+    await renderSellTable();
+    await populateSellStyleSelect();
+    await refreshDashboardNumbers();
+    toast('Sale recorded ✓', 'success');
+    document.getElementById('sell-qty').value = '';
+    document.getElementById('sell-price').value = '';
+    document.getElementById('sell-preview').style.display = 'none';
+    document.getElementById('sell-style').value = '';
+  } catch (e) {
+    console.error(e);
+    toast('Could not save sale. Please try again.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function deleteSale(id) {
+  if (!confirm('Remove this sale record?')) return;
+  const sales = await getSales();
+  await saveSales(sales.filter(s => s.id !== id));
+  await renderSellTable();
+  await populateSellStyleSelect();
+  await refreshDashboardNumbers();
+  toast('Sale removed', 'error');
+}
+
+async function renderSellTable() {
+  const sales = await getSales();
+  const tbody = document.getElementById('sell-tbody');
+  document.getElementById('sell-count-badge').textContent = sales.length + ' records';
+  if (!sales.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No sales recorded yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = sales.map(s => {
+    const profit = (s.price - s.costPerUnit) * s.qty;
+    const cls = profit >= 0 ? 'emerald' : 'rose';
+    return `<tr>
+      <td>${fmtDate(s.date)}</td>
+      <td><strong>${esc(s.style)}</strong></td>
+      <td>${s.qty}</td>
+      <td>${fmt(s.price)}</td>
+      <td>${fmt(s.costPerUnit)}</td>
+      <td><span class="badge badge-${cls}">${profit >= 0 ? '+' : ''}${fmt(profit)}</span></td>
+      <td><button class="btn-del" onclick="deleteSale(${s.id})" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateSellPreview() {
+  const style = document.getElementById('sell-style').value.trim();
+  const qty   = parseInt(document.getElementById('sell-qty').value, 10);
+  const price = parseFloat(document.getElementById('sell-price').value);
+  const date  = document.getElementById('sell-date').value;
+  const el    = document.getElementById('sell-preview');
+  if (style && qty > 0 && price > 0 && date) {
+    const cost   = await computeFIFOCostPerUnit(style, date, qty, Date.now() + 1);
+    const profit = (price - cost) * qty;
+    const margin = cost > 0 ? ((price - cost) / cost * 100).toFixed(1) : '∞';
+    el.style.display = 'block';
+    el.innerHTML = `<span style="color:var(--slate)">Avg cost ≈ ETB ${fmt(cost)}/unit &nbsp;·&nbsp; </span>` +
+      `<span style="color:${profit >= 0 ? 'var(--emerald)' : 'var(--rose)'}">` +
+      `Est. profit: ${profit >= 0 ? '+' : ''}ETB ${fmt(profit)} (${margin}% margin)</span>`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════
+//  Dashboard
+// ═══════════════════════════════════
+async function renderDashboard() {
+  await refreshDashboardNumbers();
+  await renderRecentSales();
+  await renderStockAlerts('stock-list-dash', 5);
+}
+
+async function refreshDashboardNumbers() {
+  const today     = todayStr();
+  const allSales  = await getSales();
+  const todaySales = allSales.filter(s => s.date === today);
+  const revenue   = todaySales.reduce((s, x) => s + x.price * x.qty, 0);
+  const cost      = todaySales.reduce((s, x) => s + x.costPerUnit * x.qty, 0);
+  const profit    = revenue - cost;
+  const units     = todaySales.reduce((s, x) => s + x.qty, 0);
+  const stock     = await getStockLevels();
+  const totalStock = Object.values(stock).reduce((s, v) => s + Math.max(0, v), 0);
+  const lowCount  = Object.values(stock).filter(v => v > 0 && v <= 5).length;
+
+  const profitEl = document.getElementById('today-profit');
+  profitEl.textContent = (profit >= 0 ? '+' : '') + 'ETB ' + fmt(profit);
+  profitEl.className = 'amount' + (profit < 0 ? ' negative' : '');
+  document.getElementById('today-profit-sub').textContent =
+    units > 0 ? units + ' pair' + (units > 1 ? 's' : '') + ' sold · ETB ' + fmt(revenue) + ' revenue' : 'No sales recorded yet';
+  document.getElementById('today-revenue').textContent   = fmt(revenue);
+  document.getElementById('today-sold').textContent      = units;
+  document.getElementById('total-stock').textContent     = totalStock;
+  document.getElementById('low-stock-count').textContent = lowCount;
+  document.getElementById('today-date-label').textContent = fmtDate(today);
+}
+
+async function renderRecentSales() {
+  const allSales = await getSales();
+  const recent = allSales.slice(0, 6);
+  const tbody  = document.getElementById('recent-sales-tbody');
+  if (!recent.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No recent sales</td></tr>'; return;
+  }
+  tbody.innerHTML = recent.map(s => {
+    const p = (s.price - s.costPerUnit) * s.qty;
+    return `<tr>
+      <td>${esc(s.style)}</td><td>${s.qty}</td><td>${fmt(s.price)}</td>
+      <td><span class="badge badge-${p >= 0 ? 'emerald' : 'rose'}">${p >= 0 ? '+' : ''}${fmt(p)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function renderStockAlerts(containerId, limit) {
+  if (limit === undefined) limit = 9999;
+  const stock   = await getStockLevels();
+  const el      = document.getElementById(containerId);
+  const entries = Object.entries(stock).filter(function(e){ return e[1] > 0; }).sort((a, b) => a[1] - b[1]);
+  if (!entries.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:12px 0">No stock data yet.</div>'; return;
+  }
+  const shown = entries.slice(0, limit);
+  el.innerHTML = shown.map(([style, qty]) => {
+    const cls = qty <= 5 ? 'low' : qty <= 15 ? 'warn' : 'ok';
+    const lbl = qty <= 5 ? '⚠️ Restock soon' : qty <= 15 ? '⏳ Getting low' : '✅ In stock';
+    return `<div class="stock-item">
+      <div><div class="stock-name">${esc(style)}</div><div class="stock-label">${lbl}</div></div>
+      <div style="text-align:right"><div class="stock-qty ${cls}">${qty}</div><div class="stock-label">pairs</div></div>
+    </div>`;
+  }).join('');
+  if (limit < entries.length)
+    el.innerHTML += `<div style="text-align:center;font-size:.78rem;color:var(--muted);margin-top:8px">+${entries.length - limit} more → Reports tab</div>`;
+}
+
+// ═══════════════════════════════════
+//  Reports
+// ═══════════════════════════════════
+async function populateMonthSelector() {
+  const sel    = document.getElementById('report-month-sel');
+  const cur    = sel.value;
+  const months = new Set();
+  const now    = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  }
+  const purchases = await getPurchases();
+  const sales = await getSales();
+  [...purchases, ...sales].forEach(r => months.add(r.date.slice(0, 7)));
+  const sorted = [...months].sort().reverse();
+  sel.innerHTML = sorted.map(m => `<option value="${m}">${fmtMonth(m)}</option>`).join('');
+  if (cur && sorted.includes(cur)) sel.value = cur;
+  else if (sorted.length) sel.value = sorted[0];
+}
+
+async function renderReports() {
+  const month     = document.getElementById('report-month-sel').value;
+  if (!month) return;
+  const allPurchases = await getPurchases();
+  const allSales = await getSales();
+  const purchases = allPurchases.filter(p => p.date.startsWith(month));
+  const sales     = allSales.filter(s => s.date.startsWith(month));
+  const buyCost   = purchases.reduce((s, p) => s + p.qty * p.cost, 0);
+  const revenue   = sales.reduce((s, sl) => s + sl.price * sl.qty, 0);
+  const costOfSales = sales.reduce((s, sl) => s + sl.costPerUnit * sl.qty, 0);
+  const profit    = revenue - costOfSales;
+  const margin    = revenue > 0 ? (profit / revenue * 100).toFixed(1) : 0;
+
+  document.getElementById('rep-buy-cost').textContent  = fmt(buyCost);
+  document.getElementById('rep-revenue').textContent   = fmt(revenue);
+  const profitEl = document.getElementById('rep-profit');
+  profitEl.textContent  = (profit >= 0 ? '+' : '') + 'ETB ' + fmt(profit);
+  profitEl.className    = 'stat-value ' + (profit < 0 ? 'rose' : 'emerald');
+  document.getElementById('rep-margin').textContent    = 'Margin: ' + margin + '% · ' + sales.length + ' sales';
+  await renderStockAlerts('stock-list-full');
+}
+
+// ═══════════════════════════════════
+//  Style Helpers
+// ═══════════════════════════════════
+async function populateSellStyleSelect() {
+  // Dynamically populate the searchable datalist with only styles
+  // that currently have an active stock level greater than 0.
+  const stock = await getStockLevels();
+  const datalist = document.getElementById('sell-styles-datalist');
+  const input = document.getElementById('sell-style');
+  const cur = input.value;
+  const available = Object.entries(stock).filter(([, v]) => v > 0).sort((a, b) => a[0].localeCompare(b[0]));
+  datalist.innerHTML = available.map(([s, q]) => `<option value="${esc(s)}" label="${esc(s)} (${q} left)">`).join('');
+  if (cur) input.value = cur;
+}
+
+async function updateStylesDatalist() {
+  const purchases = await getPurchases();
+  const styles = [...new Set(purchases.map(p => p.style))];
+  document.getElementById('styles-datalist').innerHTML = styles.map(s => `<option value="${esc(s)}">`).join('');
+}
+
+// ═══════════════════════════════════
+//  Export / Import
+// ═══════════════════════════════════
+async function exportData() {
+  const data = {
+    version: 1,
+    app: 'SoleTrack',
+    username: currentUser,
+    exported: new Date().toISOString(),
+    purchases: await getPurchases(),
+    sales: await getSales()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'soletrack_' + currentUser + '_' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Data exported ✓', 'success');
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.purchases) || !Array.isArray(data.sales))
+        throw new Error('Invalid SoleTrack backup file.');
+      const currentPurchases = await getPurchases();
+      const currentSales = await getSales();
+      const existP = new Set(currentPurchases.map(p => p.id));
+      const existS = new Set(currentSales.map(s => s.id));
+      const newP   = data.purchases.filter(p => !existP.has(p.id));
+      const newS   = data.sales.filter(s => !existS.has(s.id));
+      await savePurchases([...currentPurchases, ...newP]);
+      await saveSales([...currentSales, ...newS]);
+      await refreshAll();
+      toast('Imported ' + newP.length + ' purchases, ' + newS.length + ' sales ✓', 'success');
+    } catch (err) {
+      toast('Import failed — check file format.', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════
+//  Full Refresh
+// ═══════════════════════════════════
+async function refreshAll() {
+  await renderBuyTable();
+  await renderSellTable();
+  await updateStylesDatalist();
+  await populateSellStyleSelect();
+  await renderDashboard();
+}
+
+// ═══════════════════════════════════
+//  Toast
+// ═══════════════════════════════════
+function toast(msg, type) {
+  if (!type) type = 'success';
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = type + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = type; }, 2800);
+}
+
+// ═══════════════════════════════════
+//  Formatting
+// ═══════════════════════════════════
+function fmt(n) {
+  return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function esc(s) {
+  return String(s).replace(/[<>&"']/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;', "'":'&#39;' })[c]);
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const parts = d.split('-');
+  const dt = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  return dt.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+}
+function fmtMonth(m) {
+  const parts = m.split('-');
+  return new Date(+parts[0], +parts[1] - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+// ═══════════════════════════════════
+//  Event Listeners (DOMContentLoaded)
+// ═══════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Sell preview
+  ['sell-style', 'sell-qty', 'sell-price', 'sell-date'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', updateSellPreview);
+    el.addEventListener('change', updateSellPreview);
+  });
+  // Enter to login
+  ['auth-username', 'auth-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleAuth();
+    });
+  });
+  // Handle hash-based deep links (from PWA shortcuts)
+  const hash = window.location.hash.replace('#', '');
+  if (hash === 'sell' || hash === 'buy') {
+    window.addEventListener('appReady', () => navigate(hash));
+  }
+});
+</script>
+</body>
+</html>

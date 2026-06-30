@@ -1,0 +1,38 @@
+{
+  "name": "SoleTrack — Shoe Marketplace Tracker",
+  "short_name": "SoleTrack",
+  "description": "A mobile-first shoe retail tracker for daily sales, purchases, profit analytics, and stock management. Works fully offline.",
+  "id": "/SoleTrack/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Record a Sale",
+      "short_name": "Sell",
+      "description": "Quickly log a shoe sale",
+      "url": "./index.html?page=sell",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Add Purchase",
+      "short_name": "Buy",
+      "description": "Log a stock purchase",
+      "url": "./index.html?page=buy",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
