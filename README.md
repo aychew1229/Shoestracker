@@ -26,7 +26,7 @@
 | 📲 Installable | Add to Home Screen on Android and iOS (PWA) |
 
 ```
-
+---
 ## 📲 Installing on a Phone (Add to Home Screen)
 
 ### Android (Chrome)
